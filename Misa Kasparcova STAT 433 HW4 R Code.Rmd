@@ -1,0 +1,431 @@
+---
+title: "Misa Kasparcova STAT 433 HW4"
+author: "Misa Kasparcova"
+date: "2025-10-30"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Question 1:
+
+Suppose that we want to find a maximizer of the following function
+
+$$
+f(x) = \frac{\log(1 + \log(x))}{\log(1 + x)}, \quad x > 1.
+$$
+
+(a) Draw a plot of $f(x)$ over the interval (1, 10) using R.
+
+```{r}
+f = function(x) {
+  log(1 + log(x)) / (log(1 + x))
+}
+
+curve(f, from = 1, to = 10, xlab = "x", ylab = "f(x)")
+```
+
+
+
+(b) We are going to use Newton’s method. Given $x_n$, provide the update to 
+$x_n$, i.e., $x_{n+1}$.
+
+
+To find the maximum, we first locate the critical points of $f(x)$ where the 
+first derivative is zero. Let $f'(x)$ and $f''(x)$ denote the first and 
+second derivatives of $f(x)$. The Newton’s method for finding a root of an 
+equation $g(x) = 0$ is
+$$
+x_{n+1} = x_n - \frac{g(x_n)}{g'(x_n)}
+$$
+
+Here, we are solving for the point where $f'(x) = 0$, where $g(x) = f'(x)$  
+Thus, the Newton’s method update becomes
+$$
+{
+x_{n+1} = x_n - \frac{f'(x_n)}{f''(x_n)}, \quad n = 0, 1, 2, \dots
+}
+$$
+
+
+
+(c)Write an R code to implement Newton’s method for this problem. Show the 
+result based on your code. The second derivative of $f(x)$ can be complicated. 
+For the second derivative, you could create an R function to compute it using 
+the following approximation:
+
+$$
+f''(x) \approx \frac{f'(x + h) - f'(x)}{h},
+$$
+
+for a small h. If you have no problem calculating the second derivative by hand, 
+you should proceed with that method.
+
+
+Use function from part a.
+```{r}
+f = function(x) {
+  log(1 + log(x)) / (log(1 + x))
+}
+```
+
+
+Find first derivative.
+```{r}
+f_prime = function(x) {
+  num = (1 / (x * (1 + log(x)))) * log(1 + x) - log(1 + log(x)) / (1 + x)
+  deriv = (log(1 + x))^2
+  num / deriv
+}
+```
+
+
+Use the approximation for second derivative.
+```{r}
+f_prime2 = function(x, h = 1e-5) {
+  (f_prime(x + h) - f_prime(x)) / h
+}
+```
+
+Utilize Newton's method.
+```{r}
+newton_method = function(x0, tol = 1e-8, max_iter = 100) {
+  x = x0
+  for (i in 1:max_iter) {
+    fp = f_prime(x)
+    fpp = f_prime2(x)
+    x_new = x - fp / fpp
+    if (abs(x_new - x) < tol) {
+      cat(i, "iterations\n")
+      return(x_new)
+    }
+    x = x_new
+  }
+  return(x)
+}
+
+```
+
+Since x > 1, use $x_0$ = 2 as starting point.
+```{r}
+x_max = newton_method(2)
+x_max
+f(x_max)
+```
+
+
+## Question 2:
+
+The probability of recovery from a certain disease is 0.15. Nine people have
+contracted the disease. What is the probability that at most 2 of them
+recover? What is the expected number that will recover?
+
+Create function for binomial probability.
+```{r}
+n = 9
+p = 0.15
+
+prob = function(n, k) {
+  factorial(n) / (factorial(k) * factorial(n - k))
+}
+```
+
+Obtain probability that at most 2 recover.
+```{r}
+most_2 = 0
+for (k in 0:2) {
+  prob_k = prob(n, k) * (p^k) * ((1 - p)^(n - k))
+  most_2 = most_2 + prob_k
+}
+
+most_2
+```
+
+Or utilize pbinom function.
+```{r}
+second_most_2 = pbinom(2, size = n, prob = p)
+second_most_2
+```
+
+Obtain expected number that will recover.
+```{r}
+expected_recover = n * p
+expected_recover
+```
+
+## Question 3:
+
+Calculating binomial probabilities using a recursive function.
+
+Let $X \sim \text{binom}(k,p)$ and let 
+$$
+f(x, k, p) = \mathbb{P}(X = x) = \binom{k}{x} p^x (1 - p)^{k-x} 
+\text{ for } 0 \le x \le k \text{ and } 0 \le p \le 1
+$$
+
+$$
+f(0, k, p) = (1 - p)^k
+$$
+
+$$
+f(x, k, p) = \frac{(k - x + 1)p}{x(1 - p)} f(x - 1, k, p), \quad \text{for } x \ge 1
+$$
+
+Use this to write a recursive function binom.pmf(x, k, p) that returns
+$f(x, k, p)$.
+You can check that your function works by comparing it with the built-in
+function dbinom(x, k, p)
+
+Create the function.
+```{r}
+func = function(x, k, p) {
+  if (x == 0) {
+    return((1 - p)^k)
+  } else {
+    solution = ((k - x + 1) * p / (x * (1 - p))) * func(x - 1, k, p)
+    return(solution)
+  }
+}
+```
+
+Apply values into function.
+```{r}
+x = 2
+k = 9
+p = 0.15
+
+cat("Recursive function:", func(x, k, p))
+```
+
+Check the function by comparing with dbinom(x, k, p).
+```{r}
+x = 2
+k = 9
+p = 0.15
+
+check = dbinom(x, k, p)
+cat("dbinom function:", check)
+```
+
+
+
+## Question 4:
+
+A random variable $U$ has a $U(a, b)$ distribution if 
+$P(U \in (u, v)) = (v - u)/(b - a)$ for all $a \le u \le v \le b$.
+Show that if $U \sim U(a, b)$ then so is $a + b - U$.
+
+Let $U \sim U(a, b)$. By definition of the uniform distribution, the 
+probability that $U$ lies between any two points $u$ and $v$ such that 
+$a \le u \le v \le b$ is given by
+
+$$
+P(U \in (u, v)) = \frac{v - u}{b - a}
+$$
+
+Define a new random variable
+$$
+V = a + b - U
+$$
+
+We want to show that $V$ also follows a uniform distribution on the same 
+interval $[a, b]$; that is, $V \sim U(a, b)$. Since $U$ can take any value 
+between $a$ and $b$, we can compute the possible range of $V$:
+
+If $U = a$, then $V = a + b - a = b$.
+If $U = b$, then $V = a + b - b = a$.
+
+As $U$ increases from $a$ to $b$, the variable $V = a + b - U$ 
+decreases from $b$ to $a$. $V$ also takes values in the interval $[a, b]$.
+
+For any $a \le u \le v \le b$, we have
+$$
+\begin{aligned}
+P(V \in (u, v)) 
+&= P(a + b - U \in (u, v)) \\
+&= P(U \in (a + b - v, \; a + b - u))
+\end{aligned}
+$$
+
+
+Because $U$ is uniformly distributed over $[a, b]$, its probability over any 
+subinterval depends only on the length of the interval:
+
+$$
+P(U \in (a + b - v, \; a + b - u)) 
+= \frac{(a + b - u) - (a + b - v)}{b - a}
+= \frac{v - u}{b - a}
+$$
+
+
+Since we have shown that
+$$
+P(V \in (u, v)) = \frac{v - u}{b - a}
+$$
+
+for all $a \le u \le v \le b$, it follows that $V$ has the same probability 
+as a $U(a, b)$ random variable.
+
+$$
+{V = a + b - U \sim U(a, b)}
+$$
+
+
+
+## Question 5:
+
+Suppose $X \sim U(0, 1)$ and $Y = X^2$.
+Use the cdf of X to show that $P(Y \le y) = \sqrt{y}$ for $0 < y < 1$, and thus
+obtain the pdf of $Y$. Hence or otherwise evaluate E($Y$) and Var($Y$).
+
+Let $X \sim U(0,1)$ and define $Y = X^2$. We will find the CDF and pdf of $Y$, then compute $E(Y)$ and $Var(Y)$.
+
+
+cdf of $Y$ for $0 < y < 1$,
+$$
+\begin{aligned}
+F_Y(y) &= P(Y \le y) = P(X^2 \le y).
+\end{aligned}
+$$
+
+Since $X$ takes values in [0,1] and is nonnegative, $X^2 \le y$ is equivalent to $X \le \sqrt{y}$
+$$
+\begin{aligned}
+F_Y(y) &= P(X \le \sqrt{y}) = F_X(\sqrt{y}).
+\end{aligned}
+$$
+
+For $X\sim U(0,1)$ we have $F_X(x)=x$ for $0\le x\le1$. Hence for $0<y<1$
+$$
+{\,F_Y(y)=\sqrt{y}\, }
+$$
+
+To find the pdf of $Y$, differentiate the cdf on $(0,1)$
+$$
+\begin{aligned}
+f_Y(y) &= \frac{d}{dy}F_Y(y)=\frac{d}{dy}\sqrt{y}=\frac{1}{2\sqrt{y}},\qquad 0<y<1
+\end{aligned}
+$$
+
+pdf is
+$$
+{\,f_Y(y)=\frac{1}{2\sqrt{y}}\,,\quad 0<y<1\,}
+$$
+
+
+Expectation $E(Y)$ using the pdf of $Y$
+$$
+\begin{aligned}
+E(Y) &= \int_0^1 y\,f_Y(y)\,dy
+= \int_0^1 y\cdot\frac{1}{2\sqrt{y}}\,dy
+= \frac{1}{2}\int_0^1 \sqrt{y}\,dy.
+\end{aligned}
+$$
+
+Compute the integral
+$$
+\frac{1}{2}\int_0^1 y^{1/2}\,dy
+= \frac{1}{2}\cdot\frac{2}{3}=\frac{1}{3}.
+$$
+
+We get $E(Y)$ as
+$$
+{\,E(Y)=\frac{1}{3}\,}
+$$
+
+
+
+Variance $Var(Y)$, compute $E(Y^2)$
+$$
+\begin{aligned}
+E(Y^2) &= \int_0^1 y^2 f_Y(y)\,dy
+= \frac{1}{2}\int_0^1 y^{3/2}\,dy
+= \frac{1}{2}\cdot\frac{2}{5}=\frac{1}{5}
+\end{aligned}
+$$
+
+Compute variance
+$$
+\begin{aligned}
+\operatorname{Var}(Y) &= E(Y^2)-[E(Y)]^2
+= \frac{1}{5}-\left(\frac{1}{3}\right)^2
+= \frac{1}{5}-\frac{1}{9}
+= \frac{9-5}{45}=\frac{4}{45}
+\end{aligned}
+$$
+
+
+
+
+## Question 6:
+
+
+Telephone calls arrive at a switchboard in accordance with a Poisson process
+of rate $\lambda = 5$ per hour.
+
+(a). What is the distribution of $N_1$ = the number of calls that arrive in any
+one hour period?
+
+Let telephone calls arrive according to a Poisson process with rate 
+$$
+\lambda = 5 \text{ calls per hour}
+$$
+
+By the definition of a Poisson process, the number of arrivals in a time interval of length $t$ has a Poisson distribution with parameter $\lambda t$
+$$
+N_1 \sim \text{Poisson}(\lambda t)
+$$
+
+For a one-hour period, $t = 1$
+$$
+N_1 \sim \text{Poisson}(\lambda \cdot 1) = \text{Poisson}(5)
+$$
+
+The pmf of $N_1$ is
+$$
+P(N_1 = k) = \frac{e^{-5} \, 5^k}{k!}, \quad k = 0, 1, 2, \dots
+$$
+
+
+(b). What is the distribution of $N_2$ = the number of calls that arrive in any
+half hour period?
+
+Given that the rate is $\lambda = 5$ calls per hour, the expected number of calls in a 
+half-hour period is
+$$
+\lambda t = 5 \times \frac{1}{2} = 2.5.
+$$
+
+Using Poisson process, the number of arrivals in a time interval of length $t$ has a Poisson distribution with parameter $\lambda t$
+$$
+N_2 \sim \text{Poisson}(\lambda t)
+$$
+The pmf of $N_2$ is
+$$
+P(N_2 = k) = \frac{e^{-2.5} \, 2.5^k}{k!}, \quad k = 0, 1, 2, \dots
+$$
+
+
+(c). Find the probability that the operator is idle for the next half hour.
+
+The pmf of $N_2$ is
+$$
+N_2 \sim \text{Poisson}(\lambda t) = \text{Poisson}(5 \times 0.5) = \text{Poisson}(2.5).
+$$
+The pmf of $N_2$
+$$
+P(N_2 = 0) = e^{-2.5} \frac{(2.5)^0}{0!} = e^{-2.5}
+$$
+
+Compute using code
+```{r}
+lambda = 5
+t = 0.5
+lambda_t = lambda * t
+p_idle = dpois(0, lambda_t)
+p_idle
+```
+
+
+
+

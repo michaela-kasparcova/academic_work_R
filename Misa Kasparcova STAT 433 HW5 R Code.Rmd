@@ -1,0 +1,222 @@
+---
+title: "Misa Kasparcova STAT 433 HW5"
+author: "Misa Kasparcova"
+date: "2025-11-05"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Question 1:
+
+Let $f$ be a standard normal density. Use the accept-reject method to generate 
+10000 samples from the standard normal distribution, $f$. In doing so, we 
+select the standard Cauchy, $g(x)$, as the candidate density,
+
+$$
+g(x) = \frac{1}{\pi} \frac{1}{1 + x^2}, \quad x \in \mathbb{R}
+$$
+
+(a) Explain the implementation of the accept-reject method in detail. Plot a
+histogram of the sample to verify it looks like a normal distribution. 
+Generate 10000 random numbers.
+
+
+The accept-reject method is used when the inverse transformation method fails 
+to generate the required random variables. To utilize this method, we need to 
+know the functional form of the density (f), but we utilize a simpler form of 
+the density as (g), which is called the candidate density. This candidate 
+density must have f and g as compatible supports and there must be a contant M 
+such that f(x)/g(x) is less than or equal to M for all x. 
+
+
+Function of normal distribution
+```{r}
+f = function(x) (1/sqrt(2*pi)) * exp(-x^2 / 2)
+```
+
+Function of standard Cauchy
+```{r}
+g = function(x) (1/pi) * (1 / (1 + x^2))
+```
+
+Obtain the max of f(x)/g(x)
+```{r}
+x_seq = seq(-10, 10, length.out = 10000)
+ratio = f(x_seq) / g(x_seq)
+c = max(ratio)
+c
+```
+
+Generate 10000 random numbers in the sample
+```{r}
+set.seed(123)
+n = 10000
+samples = numeric(0)
+
+while(length(samples) < n) {
+  x = rcauchy(1)
+  u = runif(1)
+  if (u <= f(x) / (c * g(x))) {
+    samples = c(samples, x)
+  }
+}
+```
+
+
+Plot the normal distribution and standard Cauchy
+```{r}
+hist(samples,  probability = TRUE,
+     main = "Histogram of Sample", xlab = "x")
+curve(dnorm(x), add = TRUE, lwd = 3)
+```
+
+
+
+
+(b) To generate 10000 random numbers in (a), how many are drawn from the
+candidate density? Compare this number with its theoretical mean.
+
+Obtain normal distribution and standard Cauchy
+```{r}
+set.seed(123)
+f = function(x) dnorm(x)
+g = function(x) dcauchy(x)
+```
+
+Obtain the max of f(x)/g(x)
+```{r}
+x = seq(-10, 10, length.out = 10000)
+ratio = f(x) / g(x)
+c = max(ratio)
+c
+```
+
+
+```{r}
+n = 10000
+samples = numeric(0)
+cand = 0
+
+while (length(samples) < n) {
+  x = rcauchy(1)          
+  u = runif(1)            
+  cand = cand + 1
+  if (u <= f(x) / (c * g(x))) {
+    samples = c(samples, x)
+  }
+}
+
+cat("Candidate draws is", cand, "\n")
+cat("Theoretical expected is", n * c, "\n")
+```
+
+We observe that the candidate draws is 15184, which is very close to the 
+expected theoretical mean of 15203.46.
+
+
+
+(c) Noting that $E(X) = 0$ and $var(X) = 1$, provide the sample mean and 
+variance of the generated sample in (a). Comment on your result.
+
+Obtain sample mean and variance from part (a)
+```{r}
+sample_mean = mean(samples)
+sample_var  = var(samples)
+cat("Sample mean is", sample_mean, "\n")
+cat("Sample variance is", sample_var, "\n")
+```
+
+The simulated sample mean of 0.00116 is extremely close to the theoretical mean 
+of 0, and the sample variance of 0.98646 is very close to the theoretical 
+variance of 1. We can observe that the results confirm that the accept–reject 
+method successfully generated a sample that is in line with the standard normal 
+distribution.
+
+
+
+## Question 2:
+
+Consider the discrete random variable with pmf given by:
+
+$$
+P(X = 1) = 0.1, \quad P(X = 2) = 0.3, \quad P(X = 5) = 0.6
+$$
+
+Plot the cdf for this random variable. Write a program to simulate a random 
+variable with this distribution, using the built-in function runif(1).
+
+Obtain the pmf
+```{r}
+x = c(1, 2, 5)
+p = c(0.1, 0.3, 0.6)
+```
+
+Obtain cdf
+```{r}
+cdf = F = c(p[1], p[1] + p[2], 1)
+cdf
+```
+
+Plot the cdf
+```{r}
+plot(x, cdf, type = "s", lwd = 2,
+     xlab = "x", ylab = "F(x)", main = "CDF of X")
+points(x, cdf, pch = 15, col = "red")
+```
+
+
+Simulate a random variable using runif(1)
+```{r}
+rand_var = runif(1)
+X = x[which.max(rand_var <= cdf)]
+cat("X =", X, "\n")
+```
+
+
+
+## Question 3:
+
+Consider the continuous random variable with pdf given by:
+
+$$
+f(x) = 3(x - 1)^2, \quad 1 < x < 2
+$$
+
+Plot the cdf for this random variable.
+Show how to simulate a rv with this cdf using the inversion method.
+
+
+Create pdf of function
+```{r}
+pdf = function(x) {
+  3 * (x - 1)^2
+}
+```
+
+
+Create cdf of function by obtaining integral from 1 to x
+```{r}
+cdf =  function(x) {
+  3 * ((x - 1)^3) / 3  
+}
+```
+
+
+Plot of cdf variable
+```{r}
+curve(cdf(x), from = 1, to = 2,
+      main = "CDF of f(x)",
+      xlab = "x", ylab = "F(x)")
+```
+
+
+Simulate a random variable with this cdf using the inversion method
+```{r}
+rand_var2 = runif(1)
+X2 = 1 + rand_var2^(1/3)
+cat("X =", X2, "\n")
+```
+
+
+

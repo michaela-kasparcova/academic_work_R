@@ -1,0 +1,581 @@
+---
+title: "Misa Kasparcova STAT 490 HW2"
+author: "Misa Kasparcova"
+date: "2025-10-04"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Load necessary libraries.
+```{r}
+library(meta)
+library(metafor)
+library(dplyr)
+library(tidyr)
+```
+
+Input data.
+```{r}
+outcome = c("Duration", "Duration", "Duration", "Duration", "Duration",
+            "Duration", "LOS", "LOS", "LOS", "LOS", "LOS", "LOS", "LOS",
+            "Analgesic", "Analgesic", "Analgesic", "Analgesic",
+            "Analgesic")
+
+study = c(
+  "Ahmet Tefekli 2007", "B. Lojanapiwat 2010", "Hemendra N. Shah 2008",
+  "Hemendra Shah 2009", "J. Jun-Ou 2010", "Michael Choi 2006",
+  "Ahmet Tefekli 2007", "B. Lojanapiwat 2010", "Hemendra N. Shah 2008",
+  "Hemendra Shah 2009", "J. Jun-Ou 2010", "Madhu S. Agrawal 2008",
+  "Michael Choi 2006", "B. Lojanapiwat 2010", "Hemendra N. Shah 2008",
+  "Hemendra Shah 2009", "J. Jun-Ou 2010", "Madhu S. Agrawal 2008")
+
+mean_E = c(60, 49, 51, 52, 47, 82, 38, 85, 35, 34, 82, 22, 37, 39, 150, 103, 
+           37, 82)
+sd_E = c(9, 24, 10, 23, 17, 18, 10, 23, 11, 17, 24, 4, 24, 35, 97, 116, 31, 24)
+n_E = c(17, 45, 33, 454, 43, 12, 17, 45, 33, 454, 43, 101, 12, 45, 33, 454, 
+        43, 101)
+
+mean_C = c(76, 57, 47, 68, 59, 73, 67, 129, 44, 56, 106, 54, 38, 75, 246, 250, 
+           70, 126)
+sd_C = c(10, 20, 16, 34, 18, 15, 22, 54, 22, 62, 35, 5, 24, 32, 167, 132, 36, 
+         33)
+n_C = c(18, 59, 32, 386, 52, 12, 18, 59, 32, 386, 52, 101, 12, 59, 32, 386, 
+        52, 101)
+
+pcnl_data = data.frame(outcome, study, mean_E, sd_E, n_E, mean_C, sd_C, n_C)
+pcnl_data
+```
+
+
+
+## Duration
+
+## Question (a)
+
+Conduct fixed-effect analysis for duration.
+```{r}
+duration = pcnl_data[pcnl_data$outcome == "Duration",]
+
+meta_fixed_duration = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = duration,
+  sm = "MD",        # Mean difference
+  common = TRUE,  #Fixed effects
+  random = FALSE,
+  level = 0.90)
+
+summary(meta_fixed_duration)
+```
+
+
+Conduct random-effect analysis for duration.
+```{r}
+meta_random_duration = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = duration,
+  sm = "MD",             # Mean difference
+  common = FALSE,       
+  random = TRUE,      # Random effects
+  level = 0.90)
+
+summary(meta_random_duration)
+```
+
+Most of the studies show statistically significant results at the 90% 
+confidence level for a two-tailed test. In contrast, the studies by Hemendra N. 
+Shah (2008) and Michael Choi (2006) are not significant, as their confidence 
+intervals include zero. Overall, the mean differences across all studies are 
+negative, indicating that the effect group’s mean is lower than that of the 
+control group.
+
+
+
+## Question (b)
+
+Conduct random-effect analysis using DerSimonian-Laird, Paule-Mandel
+and restricted MLE methods.
+
+
+DerSimonian-Laird method for duration.
+```{r}
+meta_DL_duration = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = duration,
+  sm = "MD",                
+  common = FALSE,        
+  random = TRUE,  # Random effects
+  method.tau = "DL",  # DerSimonian-Laird 
+  level = 0.90)
+
+summary(meta_DL_duration)
+```
+
+
+Paule-Mandel method for duration.
+```{r}
+meta_PM_duration = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = duration,
+  sm = "MD",
+  common = FALSE,
+  random = TRUE, # Random effects
+  method.tau = "PM", # Paule-Mandel       
+  level = 0.90)
+
+summary(meta_PM_duration)
+```
+
+
+Restricted MLE method for duration.
+```{r}
+meta_REML_duration = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = duration,
+  sm = "MD",
+  common = FALSE,
+  random = TRUE, # Random effects
+  method.tau = "REML",  #Restricted MLE
+  level = 0.90)
+
+summary(meta_REML_duration)
+```
+
+View Tau-squared values.
+```{r}
+tau_values = data.frame(
+  Method = c("DerSimonian-Laird", "Paule-Mandel", "REML"),
+  tau_squared   = c(meta_DL_duration$tau^2, meta_PM_duration$tau^2, 
+                    meta_REML_duration$tau^2))
+print(tau_values)
+```
+
+We can observe from the table above that the $\tau^2$ values are all relatively 
+similar. The associated p-values are all significant at $\alpha$ = .1, but not 
+significant at $\alpha$ = .05.
+
+
+
+## Question (c)
+
+Hypotheses:
+
+Null hypothesis ($H_0$): 
+$$
+\theta_1 = \theta_2 = \dots = \theta_k = \theta
+$$
+
+Alternative hypothesis ($H_1$): 
+$$
+\theta_i, \theta_j \exists\, i, j \text{ such that } \theta_i \ne \theta_j,\ i \ne j
+$$
+
+```{r}
+Q_value  = meta_fixed_duration$Q
+Q_pvalue = meta_fixed_duration$pval.Q
+cat("Cochran’s Q =", Q_value, "  p-value =", Q_pvalue, "\n")
+```
+
+Observing the p-value that is much smaller than $\alpha$ = 0.1, we can reject 
+the null hypothesis and conclude that the random-effects model should be used. 
+
+
+
+## LOS
+
+## Question (a)
+
+Conduct fixed-effect analysis for LOS.
+```{r}
+los = pcnl_data[pcnl_data$outcome == "LOS",]
+
+meta_fixed_los = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = los,
+  sm = "MD",        # Mean difference
+  common = TRUE,  #Fixed effects
+  random = FALSE,
+  level = 0.90)
+
+summary(meta_fixed_los)
+```
+
+
+Conduct random-effect analysis for LOS.
+```{r}
+meta_random_los = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = los,
+  sm = "MD",             # Mean difference
+  common = FALSE,       
+  random = TRUE,      # Random effects
+  level = 0.90)
+
+summary(meta_random_los)
+```
+
+All of the studies yield significant results for a two-tailed test at 90% 
+except for Michael Choi 2006. Additionally, the mean difference is negative,
+meaning the mean of the effect group is less than the control group.
+
+
+
+## Question (b)
+
+Conduct random-effect analysis using DerSimonian-Laird, Paule-Mandel
+and restricted MLE methods.
+
+
+DerSimonian-Laird method for LOS.
+```{r}
+meta_DL_los = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = los,
+  sm = "MD",                
+  common = FALSE,        
+  random = TRUE,  # Random effects
+  method.tau = "DL",  # DerSimonian-Laird 
+  level = 0.90)
+
+summary(meta_DL_los)
+```
+
+
+Paule-Mandel method for LOS.
+```{r}
+meta_PM_los = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = los,
+  sm = "MD",
+  common = FALSE,
+  random = TRUE, # Random effects
+  method.tau = "PM", # Paule-Mandel       
+  level = 0.90)
+
+summary(meta_PM_los)
+```
+
+
+Restricted MLE method for LOS.
+```{r}
+meta_REML_los = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = los,
+  sm = "MD",
+  common = FALSE,
+  random = TRUE, # Random effects
+  method.tau = "REML",  #Restricted MLE
+  level = 0.90)
+
+summary(meta_REML_los)
+```
+
+
+View Tau-squared values.
+```{r}
+tau_values = data.frame(
+  Method = c("DerSimonian-Laird", "Paule-Mandel", "REML"),
+  tau_squared   = c(meta_DL_los$tau^2, meta_PM_los$tau^2, meta_REML_los$tau^2))
+print(tau_values)
+```
+
+We can observe from the table above that the DerSimonian-Laird $\tau^2$ is less 
+than the Paule-Mandel and the REML. The associated p-values are all significant 
+at $\alpha$ = .01.
+
+
+## Question (c)
+
+Hypotheses:
+
+Null hypothesis ($H_0$): 
+$$
+\theta_1 = \theta_2 = \dots = \theta_k = \theta
+$$
+
+Alternative hypothesis ($H_1$): 
+$$
+\theta_i, \theta_j \exists\, i, j \text{ such that } \theta_i \ne \theta_j,\ i \ne j
+$$
+
+```{r}
+Q_value  = meta_fixed_los$Q
+Q_pvalue = meta_fixed_los$pval.Q
+cat("Cochran’s Q =", Q_value, "  p-value =", Q_pvalue, "\n")
+```
+
+Observing the p-value that is much smaller than $\alpha$ = 0.1, we can reject 
+the null hypothesis and conclude that the random-effects model should be used. 
+
+
+
+## Analgesic
+
+## Question (a)
+
+Conduct fixed-effect analysis for Analgesic.
+```{r}
+ana = pcnl_data[pcnl_data$outcome == "Analgesic",]
+
+meta_fixed_ana = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = ana,
+  sm = "MD",        # Mean difference
+  common = TRUE,  #Fixed effects
+  random = FALSE,
+  level = 0.90)
+
+summary(meta_fixed_ana)
+```
+
+
+Conduct random-effect analysis for Analgesic.
+```{r}
+meta_random_ana = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = ana,
+  sm = "MD",             # Mean difference
+  common = FALSE,       
+  random = TRUE,      # Random effects
+  level = 0.90)
+
+summary(meta_random_ana)
+```
+
+All of the studies yield significant results for a two-tailed test at 90%. 
+Additionally, the mean difference is negative, meaning the mean of the effect
+group is less than the control group.
+
+
+
+## Question (b)
+
+Conduct random-effect analysis using DerSimonian-Laird, Paule-Mandel
+and restricted MLE methods.
+
+
+DerSimonian-Laird method for Analgesic.
+```{r}
+meta_DL_ana = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = ana,
+  sm = "MD",                
+  common = FALSE,        
+  random = TRUE,  # Random effects
+  method.tau = "DL",  # DerSimonian-Laird 
+  level = 0.90)
+
+summary(meta_DL_ana)
+```
+
+
+Paule-Mandel method for Analgesic.
+```{r}
+meta_PM_ana = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = ana,
+  sm = "MD",
+  common = FALSE,
+  random = TRUE, # Random effects
+  method.tau = "PM", # Paule-Mandel       
+  level = 0.90)
+
+summary(meta_PM_ana)
+```
+
+
+Restricted MLE method for Analgesic.
+```{r}
+meta_REML_ana = metacont(
+  n.e = n_E, 
+  mean.e = mean_E, 
+  sd.e = sd_E,
+  n.c = n_C, 
+  mean.c = mean_C, 
+  sd.c = sd_C,
+  studlab = study,
+  data = ana,
+  sm = "MD",
+  common = FALSE,
+  random = TRUE, # Random effects
+  method.tau = "REML",  #Restricted MLE
+  level = 0.90)
+
+summary(meta_REML_ana)
+```
+
+
+View Tau-squared values.
+```{r}
+tau_values = data.frame(
+  Method = c("DerSimonian-Laird", "Paule-Mandel", "REML"),
+  tau_squared   = c(meta_DL_ana$tau^2, meta_PM_ana$tau^2, meta_REML_ana$tau^2))
+print(tau_values)
+```
+
+We can observe from the table above that the DerSimonian-Laird $\tau^2$ is 
+slightly less than the Paule-Mandel and the REML. The associated p-values 
+are all significant at $\alpha$ = .1 and significant at $\alpha$ = .05. 
+DerSimonian-Laird is also significant at $\alpha$ = .01.
+
+
+## Question (c)
+
+Hypotheses:
+
+Null hypothesis ($H_0$): 
+$$
+\theta_1 = \theta_2 = \dots = \theta_k = \theta
+$$
+
+Alternative hypothesis ($H_1$): 
+$$
+\theta_i, \theta_j \exists\, i, j \text{ such that } \theta_i \ne \theta_j,\ i \ne j
+$$
+
+
+
+```{r}
+Q_value  = meta_fixed_ana$Q
+Q_pvalue = meta_fixed_ana$pval.Q
+cat("Cochran’s Q =", Q_value, "  p-value =", Q_pvalue, "\n")
+```
+
+Observing the p-value that is much smaller than $\alpha$ = 0.1, we can reject 
+the null hypothesis and conclude that the random-effects model should be used. 
+
+
+
+
+
+## Question (d)
+
+Create function for forest plot.
+```{r}
+analyze_category = function(out, measure = "MD") {
+  x = pcnl_data |> filter(outcome == out)
+  es = escalc(measure = measure,
+               m1i = x$mean_E,
+               m2i = x$mean_C,
+               sd1i = x$sd_E,
+               sd2i = x$sd_C,
+               n1i = x$n_E,
+               n2i = x$n_C)
+
+  fit = rma.uni(yi, vi, data = es, method = "DL", level = .90)
+
+  forest(fit, 
+         slab = x$study,
+         xlab = sprintf("Mean Difference (Category %s, DL)",out))
+}
+
+par(mfrow = c(2,2))
+op = par(mfrow = c(2,2))
+on.exit(par(op), add = TRUE)
+res = lapply(c("Duration","LOS","Analgesic"), analyze_category, measure = "MD")
+par(mfrow = c(1,1))
+```
+
+
+## Question (e)
+
+The results indicate that tubeless and standard PCNL differ significantly 
+across all outcome variables at the 0.1 significance level. This is supported 
+by the random-effects model p-values, all of which are below $\alpha$ = 0.1, 
+regardless of the $\tau^2$ estimation method. Furthermore, the forest plots 
+show that the confidence intervals for the random-effects estimates of 
+duration, LOS, and analgesic outcomes do not include zero, confirming the 
+significance of the findings. Finally, the significant Q test results across 
+all three outcome variables justify the use of the random-effects model 
+instead of the fixed-effect model, an assumption on which the rest of the 
+analysis is based.
+
+
+
+
+
+

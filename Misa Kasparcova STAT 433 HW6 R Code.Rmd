@@ -1,0 +1,261 @@
+---
+title: "Misa Kasparcova STAT 433 HW6 R Code"
+author: "Misa Kasparcova"
+date: "2025-11-23"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+For all questions, generate 10000 random numbers from the corresponding 
+probability distributions. For each question, write R code, execute it, 
+report the results.
+
+
+## Question 1
+
+Write R code to compute a Monte Carlo estimate $\hat{\theta}$ of
+
+$$
+\theta = \int_{0}^{\pi/3} \sin(t)\, dt,
+$$
+
+and compare your result with the exact value of the integral.
+
+Set seed:
+```{r}
+set.seed(123)
+```
+
+Generate 10000 random numbers from distribution:
+```{r}
+n = 10000
+u = runif(n, 0, pi/3)
+```
+
+Compute Monte Carlo estimate $\hat{\theta}$:
+```{r}
+mean = mean(sin(u))
+theta_hat = (pi/3) * mean
+theta_hat
+```
+
+Compute exact value of integral:
+```{r}
+func = function(t) sin(t)
+exact_value = integrate(func, lower = 0, upper = pi/3)$value
+exact_value
+```
+
+The Monte Carlo estimate of the integral of 0.49808 is extremely close to the 
+exact value of the integral of 0.5. This shows that the simulation accurately 
+approximates the true value sample from 10,000 randomly generated numbers.
+
+
+
+## Question 2
+
+Write R code to compute a Monte Carlo estimate $\hat{\theta}$ of
+
+$$
+\theta = \int_{0}^{1.5} e^{-x}\, dx,
+$$
+
+by using random samples from $(i)$ $U(0, 1.5)$ and $(ii)$ $U(0, 1)$, 
+respectively. Provide estimate of the variance of $\hat{\theta}$ for each case.
+
+
+For $(i)$ $U(0, 1.5)$:
+
+Set seed:
+```{r}
+set.seed(123)
+```
+
+Generate 10000 random numbers from distribution:
+```{r}
+n = 10000
+u2 = runif(n, 0, 1.5)
+```
+
+Obtain $\hat{\theta}$ and variance of $\hat{\theta}$:
+```{r}
+mean = mean(exp(-u2))
+var = var(exp(-u2))
+
+theta_hat2 = 1.5 * mean
+var_hat2 = (1.5^2) * var / n
+
+theta_hat2
+var_hat2
+```
+
+Compute exact value of integral:
+```{r}
+func = function(x) exp(-x)
+exact_value = integrate(func, lower = 0, upper = 1.5)$value
+exact_value
+```
+
+Compute exact variance of integral to check:
+```{r}
+n = 10000
+
+E1 = (1 - exp(-1.5)) / 1.5
+E2 = (1 - exp(-3)) / 3
+
+var_exact_1 = (1.5^2 / n) * (E2 - E1^2)
+var_exact_1
+```
+
+
+
+
+For $(ii)$ $U(0, 1)$:
+
+Set seed:
+```{r}
+set.seed(123)
+```
+
+Generate 10000 random numbers from distribution:
+```{r}
+n = 10000
+u3 = runif(n, 0, 1)
+```
+
+Obtain $\hat{\theta}$ and variance of $\hat{\theta}$:
+```{r}
+mean3 = mean(exp(-u3))
+var3 = var(exp(-u3))
+
+theta_hat3 = 1 * mean3
+var_hat3 = (1^2) * var3 / n
+
+theta_hat3
+var_hat3
+```
+
+Compute exact value of integral to check:
+```{r}
+func = function(x) exp(-x)
+exact_value = integrate(func, lower = 0, upper = 1)$value
+exact_value
+```
+
+Compute exact variance of integral to check:
+```{r}
+n = 10000
+
+E1 = (1 - exp(-1)) / 1
+E2 = (1 - exp(-2)) / 2
+
+var_exact_2 = (1^2 / n) * (E2 - E1^2)
+var_exact_2
+```
+
+We observe with both the $U(0, 1.5)$ and $U(0, 1)$ case, the Monte Carlo 
+estimate of $\hat{\theta}$ and its variance are very similar to the exact 
+value and variance of the integral.
+
+
+
+## Question 3
+
+Write R code to estimate the integral
+
+$$
+\theta = \int_{0}^{1} \sqrt{\,1 - x^{2}\,}\, dx,
+$$
+
+using importance sampling with the following density function:
+
+$$
+h(x) = 4x^{3}, \qquad 0 < x < 1.
+$$
+
+Set seed:
+```{r}
+set.seed(123)
+```
+
+Generate 10000 random numbers from distribution and obtain inverse of x:
+```{r}
+n = 10000
+u4 = runif(n, 0, 1)
+x = u^(1/4)
+x = pmin(x, 1)
+```
+
+
+Define $\theta$ and $h(x)$:
+```{r}
+theta = sqrt(1 - x^2)
+hx = 4 * x^3
+```
+
+
+Obtain $\hat{\theta}$ estimate:
+```{r}
+theta_hat3 = mean(theta / hx)
+theta_hat3
+```
+
+Compute exact value of integral to check:
+```{r}
+func = function(x) sqrt(1 - x^2)
+exact_value = integrate(func, lower = 0, upper = 1)$value
+exact_value
+```
+
+The Monte Carlo estimate of the integral of 0.6798 is relatively close to the 
+exact value of the integral of 0.7854.
+
+
+
+## Question 4
+
+Make R code to estimate the integral
+
+$$
+\theta = \int_{0}^{\infty} x^{2}\, \frac{e^{-x^{2}/2}}{\sqrt{2\pi}}\, dx,
+$$
+
+using importance sampling where the sampling density is set to $expon(1)$.
+
+
+Set seed:
+```{r}
+set.seed(123)
+```
+
+
+Generate 10000 random numbers and sample from expon(1):
+```{r}
+n = 10000
+x = rexp(n, rate = 1)
+```
+
+
+Define $f(x)$ and $h(x)$:
+```{r}
+fx = x^2 * exp(-x^2 / 2) / sqrt(2 * pi)
+hx = dexp(x, rate = 1)
+```
+
+Obtain estimate for the integral:
+```{r}
+w = fx / hx
+theta_hat4 = mean(w)
+theta_hat4
+```
+
+Compute exact value of integral to check:
+```{r}
+func = function(x) x^2 * exp(-x^2 / 2) / sqrt(2 * pi)
+exact_value = integrate(func, lower = 0, upper = Inf)$value
+exact_value
+```
+
+The Monte Carlo estimate of the integral of 0.4401 is close to the exact value 
+of the integral of 0.5.

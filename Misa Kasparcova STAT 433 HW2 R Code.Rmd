@@ -1,0 +1,387 @@
+---
+title: "Misa Kasparcova STAT 433 HW2"
+author: "Misa Kasparcova"
+date: "2025-09-25"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+## Question 1:
+
+Let $h(x, n) = 1 + x + x^2 + \cdots + x^n= \sum_{i=0}^{n} x^i$. Write an R program to calculate $h(x, n)$ using a for loop.
+
+Write the function.
+```{r}
+h = function(x, n) {
+  result = 0
+  i = 0
+  for (i in 0:n) {
+    term = x^i
+    result = result + term
+  }
+  return(result)
+}
+```
+
+
+Test the function with $h(2, 10)$.
+```{r}
+h(2, 10)
+```
+
+
+## Question 2:
+
+To rotate a vector $(x, y)^T$ widdershins (anticlockwise) by $\theta$ radians, you premultiply it by the matrix 
+
+$\begin{pmatrix}$
+$\cos(\theta) & -\sin(\theta) \\$
+$\sin(\theta) &  \cos(\theta)$
+$\end{pmatrix}.$
+
+Write a program in R that does this for you.
+
+Write the function.
+```{r}
+rotate_vector = function(x, y) {
+  theta = pi
+  rotation_matrix <- matrix(
+    c(cos(theta), -sin(theta),
+      sin(theta),  cos(theta)),
+    nrow = 2,
+    byrow = TRUE)
+  vector = c(x, y)
+  rotated_vector = rotation_matrix %*% vector
+  return(as.vector(rotated_vector))
+}
+```
+
+Test the function with $h(0.5, 0.2)$.
+```{r}
+rotate_vector(0.5,0.2)
+```
+
+
+
+## Question 3:
+
+Write a program to merge two sorted vectors into a single sorted vector. Do not 
+use the sort(x) function, and try to make your program as efficient as possible. 
+That is, try to minimize the number of operations required to merge the vectors.
+
+Write the function:
+```{r}
+merge_sorted_vectors = function(x, y) {
+  # Sort each vector
+  sorted_x = sort(x)
+  sorted_y = sort(y)
+  
+  # Create empty vector for results
+  total_length = length(sorted_x) + length(sorted_y)
+  result = numeric(total_length)
+  
+  # Initialize pointers for both vectors
+  pointer_x = 1
+  pointer_y = 1
+  pointer_result = 1
+  
+  # Merge elements while both vectors have remaining values
+  while (pointer_x <= length(sorted_x) && pointer_y <= length(sorted_y)) {
+    if (sorted_x[pointer_x] <= sorted_y[pointer_y]) {
+      result[pointer_result] = sorted_x[pointer_x]
+      pointer_x = pointer_x + 1
+    } else {
+      result[pointer_result] = sorted_y[pointer_y]
+      pointer_y = pointer_y + 1
+    }
+    pointer_result = pointer_result + 1
+  }
+  
+  # Append leftover numbers from sorted_x
+  while (pointer_x <= length(sorted_x)) {
+    result[pointer_result] = sorted_x[pointer_x]
+    pointer_x = pointer_x + 1
+    pointer_result = pointer_result + 1
+  }
+  
+  # Append leftover numbers from sorted_y
+  while (pointer_y <= length(sorted_y)) {
+    result[pointer_result] = sorted_y[pointer_y]
+    pointer_y = pointer_y + 1
+    pointer_result = pointer_result + 1
+  }
+  
+  return(result)
+}
+```
+
+
+Test the function with the given vectors.
+```{r}
+x = c(3,1,2)
+y = c(5,4,6)
+merge_sorted_vectors(x,y)
+```
+
+
+## Question 4:
+
+Suppose $(x(t), y(t))$ has polar coordinates $(\sqrt{t}, 2\pi t)$. Plot $(x(t), y(t))$ for $t \in [0,10]$. Your plot should look like Figure 3.3.
+
+```{r}
+t = seq(0, 10, length.out = 1000)
+r = sqrt(t)
+theta = 2 * pi * t
+
+# Convert Polar to Cartesian
+x = r * cos(theta)
+y = r * sin(theta)
+```
+
+Create the plot.
+```{r}
+plot(x, y, type = "l", col = "black", lwd = 1,
+     xlab = "x", ylab = "y")
+```
+
+
+
+## Question 5:
+
+A room contains 100 toggle switches, originally all turned off. 100 people
+enter the room in turn. The first toggles every switch, the second toggles
+every second switch, the third every third switch, and so on, to the last
+person who toggles the last switch only.
+At the end of this process, which switches are turned on?
+
+Have all switches off.
+```{r}
+switches = rep(FALSE, 100)
+```
+
+Run the process.
+```{r}
+for (person in 1:100) {
+  for (switch in 1:100) {
+    if (switch %% person == 0) {
+      switches[switch] = !switches[switch]
+    }
+  }
+}
+```
+
+See which switches are on.
+```{r}
+on_switches = c()
+for (i in 1:100) {
+  if (switches[i] == TRUE) {
+    on_switches = c(on_switches, i)
+  }
+}
+```
+
+Print list of on switches.
+```{r}
+print(on_switches)
+```
+
+
+## Question 6:
+
+The number of ways you can choose $r$ things from a set of $n$, ignoring the order in which they are chosen, is
+
+$\binom{n}{r} = \frac{n!}{r!(n-r)!}.$
+
+Let $x$ be the first element of the set of $n$ things. We can partition the collection of possible size $r$ subsets into those that contain $x$ and those that don’t: there must be
+
+$\binom{n-1}{r-1}$
+
+subsets of the first type and
+
+$\binom{n-1}{r}$
+
+subsets of the second type. Thus
+
+$\binom{n}{r} = \binom{n-1}{r-1} + \binom{n-1}{r}.$
+
+Using this and the fact that
+
+$\binom{n}{n} = \binom{n}{0} = 1$
+
+we can write a recursive function to calculate $\binom{n}{r}$.
+
+Write the function.
+```{r}
+choose_recursive = function(n, r) {
+  if (r == 0 || r == n) {
+    return(1)
+  }
+  return(choose_recursive(n - 1, r - 1) + choose_recursive(n - 1, r))
+}
+```
+
+Test the function with $\binom{5}{2}$.
+```{r}
+choose_recursive(5, 2)
+```
+
+
+
+## Question 7:
+
+From the spuRs package you can obtain the dataset ufc.csv, with forest
+inventory observations from the University of Idaho Experimental Forest.
+Try to answer the following questions:
+
+Install necessary library.
+```{r}
+library(spuRs)
+```
+
+Read in dataset.
+```{r}
+data(ufc)
+head(ufc)
+```
+
+
+(a). What are the species of the three tallest trees? Of the five fattest trees?
+(Use the order command.)
+
+Three tallest trees.
+```{r}
+height_order = order(ufc$height.m, decreasing = TRUE)
+three_tallest = ufc[height_order[1:3], ]
+three_tallest$species
+```
+
+Five fattest trees.
+```{r}
+dbh_order = order(ufc$dbh.cm, decreasing = TRUE)
+five_fattest = ufc[dbh_order[1:5], ]
+five_fattest$species
+```
+
+(b). What are the mean diameters by species?
+```{r}
+tapply(ufc$dbh.cm, ufc$species, mean)
+```
+
+(c). What are the two species that have the largest third quartile diameters?
+
+Find the third quartiles for each species.
+```{r}
+species_list = unique(ufc$species)
+q3 = numeric(length(species_list))
+
+for (i in 1:length(species_list)) {
+  sp = species_list[i]
+  q3[i] = quantile(ufc$dbh.cm[ufc$species == sp], 0.75)
+}
+```
+
+Combine results into data frame and order by Q3.
+```{r}
+results = data.frame(species = species_list, Q3 = q3)
+results[order(results$Q3, decreasing = TRUE), ]
+```
+
+Select the largest two species.
+```{r}
+largest = results[order(results$Q3, decreasing = TRUE), ][1:2, ]
+largest
+```
+
+
+(d). What are the two species with the largest median slenderness
+(height/diameter) ratios? How about the two species with the smallest
+median slenderness ratios?
+
+Find slenderness ratios (height/diameter)
+```{r}
+ufc$slenderness = ufc$height.m / ufc$dbh.cm
+```
+
+Find medians by species.
+```{r}
+species_list = unique(ufc$species)
+median_slenderness = numeric(length(species_list))
+
+for (i in 1:length(species_list)) {
+  sp = species_list[i]
+  median_slenderness[i] = median(ufc$slenderness[ufc$species == sp])
+}
+
+```
+
+Create data frame with medians.
+```{r}
+results = data.frame(species = species_list, median_slenderness = median_slenderness)
+ordered_results = results[order(results$median_slenderness), ]
+results
+```
+
+Find largest two.
+```{r}
+largest2 = ordered_results[(nrow(ordered_results)-1):nrow(ordered_results), ]
+largest2
+```
+
+Find smallest two.
+```{r}
+smallest2 = ordered_results[1:2, ]
+smallest2
+```
+
+
+(e). What is the identity of the tallest tree of the species that was the 
+fattest on average?
+
+Find fattest species.
+```{r}
+mean_diameters = tapply(ufc$dbh.cm, ufc$species, mean)
+fattest_species = names(mean_diameters)[which.max(mean_diameters)]
+fattest_species
+```
+
+Find the tallest tree out of the fattest species.
+```{r}
+subset_fattest = ufc[ufc$species == fattest_species, ]
+tallest_index = which.max(subset_fattest$height.m)
+```
+
+Find identity of that tree.
+```{r}
+subset_fattest[tallest_index, ]
+```
+
+
+
+## Question 8:
+
+ Write a function to generate Pascal’s triangle up to a specified depth $n$.
+
+Write the function.
+```{r}
+pascal = function(n) {
+  row = c(1)
+  for (i in 1:(n-1)) {
+    row = c(1, row[-length(row)] + row[-1], 1)
+  }
+  return(row)
+}
+```
+
+Test the function with depth of $n$ = 4.
+```{r}
+pascals = pascal(4)
+print(pascals)
+```
+
+
+
+
+
+

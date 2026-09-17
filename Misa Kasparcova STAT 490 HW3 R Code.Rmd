@@ -1,0 +1,194 @@
+---
+title: "Misa Kasparcova STAT 490 HW3"
+author: "Misa Kasparcova"
+date: "2025-10-09"
+output: html_document
+---
+
+## Question 1:
+
+Use fixedpoint to find the fixed point of cos x. Start with x0 = 0 as your
+initial guess (the answer is 0.73908513).
+Now use newtonraphson to find the root of cos x − x, starting with x0 = 0
+as your initial guess. Is it faster than the fixed-point method?
+
+Conduct fixedpoint algorithm.
+```{r}
+tol = 1e-12
+maxit = 1000
+x = 0
+x_new = 0
+
+for (i in 1:maxit) {
+  x_new = cos(x)
+  if (abs(x_new - x) < tol) {
+    conv_iter = i
+    x = x_new
+  }
+  x = x_new
+}
+
+x
+```
+
+Conduct newtonraphson algorithm.
+```{r}
+f = function(x) cos(x) - x
+f_der = function(x) -sin(x) - 1
+
+tol = 1e-12
+maxit = 1000
+x = 0
+conv_iter = maxit
+
+for (i in 1:maxit) {
+  x_new = x - f(x)/f_der(x)
+  if (abs(x_new - x) < tol) {
+  }
+  x = x_new
+}
+
+x
+```
+
+From conducting the code, we see that the newtonraphson method is faster.
+
+
+## Question 2:
+
+Write a program, using both newtonraphson.r and fixedpoint.r for guidance, 
+to implement the secant root-finding method:
+
+$$
+x_{n+1} = x_n - f(x_n) \, \frac{x_n - x_{n-1}}{f(x_n) - f(x_{n-1})}.
+$$
+
+First test your program by finding the root of the function cos x − x. Next
+see how the secant method performs in finding the root of log x − exp(−x)
+using $x_0$ = 1 and $x_1$ = 2. Compare its performance with that of the other
+two methods. Write a function secant_show.r that plots the sequence of iterates
+produced by the secant algorithm.
+
+
+##DO QUESTION
+```{r}
+
+```
+
+
+
+
+## Question 3:
+
+The mean value theorem states that for a function f which is continuous
+on [a, b] and differentiable on (a, b), there exists a point $\theta \in$ (a, b)
+such that
+
+$$
+f'(\theta) = \frac{f(b) - f(a)}{b - a}.
+$$
+
+Supposing that f, f′, a and b are given, explain how to use a root-finding
+algorithm to find $\theta$.
+
+```{r}
+
+```
+
+
+## Question 4:
+
+Make your own R function to implement the secant algorithm. Your R function
+should have a form:
+mysecant <- function(f, x0, x1, tol = 1e-8){
+expressions...
+}
+
+Test your code by solving logx − $e^{-x}$ + 1 = 0 with respect to x. In doing so, you should draw
+a graph of f(x) = logx − $e^{-x}$ + 1 = 0 over x $\in$ [0, 1] and set up two initial values appropriately.
+
+```{r}
+
+```
+
+
+
+## Question 5:
+
+Let \( p \) be the quadratic \( p(x) = c_0 + c_1 x + c_2 x^2 \).
+Simpson’s rule uses a quadratic to approximate a given function \( f \) over
+two adjacent intervals, then uses the integral of the quadratic to
+approximate the integral of the function.
+
+(a) Show that
+
+$$
+\int_{-h}^{h} p(x) \, dx = 2h c_0 + \frac{2}{3} c_2 h^3.
+$$
+
+```{r}
+
+```
+
+
+
+(b) Write down three equations that constrain the quadratic to pass through
+the points \( (-h, f(-h)) \), \( (0, f(0)) \), and \( (h, f(h)) \),
+then solve them for \( c_0 \) and \( c_2 \).
+
+```{r}
+
+```
+
+
+
+(c) Show that
+
+$$
+\int_{-h}^{h} p(x) \, dx = \frac{h}{3} \left[ f(-h) + 4f(0) + f(h) \right].
+$$
+
+```{r}
+
+```
+
+
+## Question 6:
+
+The Riemann approximation to an integral $I = \int_a^b f(x) \, dx$ uses 
+rectangles.  
+For a partition of size $n$ we have the approximation  
+
+$$
+\hat{I} = \sum_{i=0}^{n-1} f(a + ih)h
+$$  
+
+where $h = (b - a)/n$ is the width of each interval in the partition.  
+
+What is the difference between the Riemann and trapezoidal approximations 
+(using the same partition)?  
+
+It is known that if $-\infty < a < b < \infty$ and $f$ is continuous on 
+$[a, b]$, then $\hat{I}$ converges as $n \to \infty$. Using this result, 
+conclude that the trapezoidal approximation converges as $n \to \infty$, 
+to the same value.
+
+
+
+
+## Question 7:
+
+Use the golden-section search algorithm to find all of the local maxima of
+the function
+
+$$
+f(x) =
+\begin{cases}
+0, & x = 0 \\
+|x| \log\left(\frac{|x|}{2}\right) e^{-|x|}, & \text{o/w}
+\end{cases}
+$$
+within the interval [−10, 10].
+Hint: plotting the function first will give you a good idea where to look.
+
+

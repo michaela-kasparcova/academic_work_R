@@ -1,0 +1,542 @@
+---
+title: "Misa Kasparcova STAT 433 HW3"
+author: "Misa Kasparcova"
+date: "2025-10-09"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Question 1:
+
+Use fixedpoint to find the fixed point of cos x. Start with x0 = 0 as your
+initial guess (the answer is 0.73908513).
+Now use newtonraphson to find the root of cos x - x, starting with x0 = 0
+as your initial guess. Is it faster than the fixed point method?
+
+
+
+Conduct fixedpoint algorithm.
+```{r}
+fixed_point = function(g, x0, tol = 1e-12, maxit = 1000) {
+  xs = numeric(maxit + 1)
+  xs[1] = x0
+  x = x0
+  conv_iter = NA_real_
+  for (i in 1:maxit) {
+    x_new = g(x)
+    xs[i + 1] = x_new
+    if (is.na(conv_iter) && abs(x_new - x) < tol) conv_iter = i
+    x = x_new
+  }
+  if (is.na(conv_iter)) conv_iter = maxit
+  list(root = xs[conv_iter + 1], iterations = conv_iter, values = xs[1:(conv_iter+1)])
+}
+
+g_cos = function(x) cos(x)
+fp_res = fixed_point(g_cos, x0 = 0, tol = 1e-12, maxit = 1000)
+
+signif(fp_res$root, 12)
+fp_res$iterations
+```
+
+
+Conduct newtonraphson algorithm.
+```{r}
+newton = function(f, df, x0, tol = 1e-12, maxit = 1000) {
+  xs = numeric(maxit + 1)
+  xs[1] = x0
+  x = x0
+  conv_iter = NA_real_
+  for (i in 1:maxit) {
+    dfx = df(x)
+    if (abs(dfx) < .Machine$double.eps) {
+      x_new = x
+    } else {
+      x_new = x - f(x) / dfx
+    }
+    xs[i + 1] = x_new
+    if (is.na(conv_iter) && abs(x_new - x) < tol) conv_iter = i
+    x = x_new
+  }
+  if (is.na(conv_iter)) conv_iter = maxit
+  list(root = xs[conv_iter + 1], iterations = conv_iter, values = xs[1:(conv_iter+1)])
+}
+
+f = function(x) cos(x) - x
+df = function(x) -sin(x) - 1
+nr_res = newton(f, df, x0 = 0, tol = 1e-12, maxit = 1000)
+
+signif(nr_res$root, 12)
+nr_res$iterations
+```
+
+From conducting the code, we see that the newtonraphson method is faster.
+
+
+## Question 2:
+
+Write a program, using both newtonraphson.r and fixedpoint.r for guidance, 
+to implement the secant root-finding method:
+
+$$
+x_{n+1} = x_n - f(x_n) \, \frac{x_n - x_{n-1}}{f(x_n) - f(x_{n-1})}.
+$$
+
+First test your program by finding the root of the function cos x - x. Next
+see how the secant method performs in finding the root of log x - exp(-x)
+using $x_0$ = 1 and $x_1$ = 2. Compare its performance with that of the other
+two methods. Write a function secant_show.r that plots the sequence of iterates
+produced by the secant algorithm.
+
+
+Create the secant function.
+```{r}
+secant = function(f, x0, x1, tol = 1e-8, max_iter = 100) {
+  iterates = numeric()
+  iterates[1] = x0
+  iterates[2] = x1
+  
+  for (i in 1:max_iter) {
+    f0 = f(x0)
+    f1 = f(x1)
+    if (abs(f1 - f0) < .Machine$double.eps) {
+      warning("Division by zero encountered.")
+      break
+    }
+    x2 = x1 - f1 * (x1 - x0) / (f1 - f0)
+    iterates = c(iterates, x2)
+    if (abs(x2 - x1) < tol) {
+      cat("Converged in", i, "iterations\n")
+      return(list(root = x2, iterates = iterates))
+    }
+    x0 = x1
+    x1 = x2
+  }
+  warning("Secant method did not converge.")
+  return(list(root = NA, iterates = iterates))
+}
+```
+
+
+Test 1: f(x) = cos(x) - x
+```{r}
+f1 = function(x) cos(x) - x
+res1 = secant(f1, x0 = 0.5, x1 = 1)
+res1$root
+```
+
+Test 2: f(x) = log(x) - $e^{-x}$
+```{r}
+f2 = function(x) log(x) - exp(-x)
+res2 = secant(f2, x0 = 1, x1 = 2)
+res2$root
+```
+
+Use Newton–Raphson to compare.
+```{r}
+newton_raphson = function(f, fprime, x0, tol = 1e-8, max_iter = 100) {
+  x = x0
+  for (i in 1:max_iter) {
+    x_new = x - f(x) / fprime(x)
+    if (abs(x_new - x) < tol) break
+    x = x_new
+  }
+  x
+}
+
+fprime2 = function(x) 1/x + exp(-x)
+nr_root = newton_raphson(f2, fprime2, x0 = 1)
+nr_root
+```
+
+Create the plot of the secant method path.
+```{r}
+secant_show = function(f, iterates) {
+  curve(f(x), from = min(iterates) - 0.5, to = max(iterates) + 0.5,
+        col = "blue", lwd = 2,
+        xlab = "x", ylab = "f(x)",
+        main = "Secant Method Path")
+  points(iterates, f(iterates), pch = 19, col = "red")
+}
+secant_show(f2, res2$iterates)
+```
+
+
+
+## Question 3:
+
+The mean value theorem states that for a function f which is continuous
+on [a, b] and differentiable on (a, b), there exists a point $\theta \in$ (a, b)
+such that
+
+$$
+f'(\theta) = \frac{f(b) - f(a)}{b - a}.
+$$
+
+Supposing that f, f', a and b are given, explain how to use a root-finding
+algorithm to find $\theta$.
+
+
+We can rewrite this condition as finding a zero of the function.
+$$
+g(x) = f'(x) - \frac{f(b) - f(a)}{b - a}
+$$
+
+That is, we want $\theta$ as.
+$$
+g(\theta) = 0.
+$$
+
+So, the MVT guarantees that at least one root $\theta \in (a, b)$.
+To find $\theta$ numerically, we can use any root-finding methods such as, 
+Bisection method, Newton-Raphson method, or Secant method. These methods all 
+aim to find x so that g(x) = 0.
+
+
+
+
+## Question 4:
+
+Make your own R function to implement the secant algorithm. Your R function
+should have a form:
+mysecant <- function(f, x0, x1, tol = 1e-8){
+expressions...
+}
+
+Test your code by solving logx - $e^{-x}$ + 1 = 0 with respect to x. In doing 
+so, you should draw a graph of f(x) = logx - $e^{-x}$ + 1 = 0 over x $\in$ 
+[0, 1] and set up two initial values appropriately.
+
+Create the secant function.
+```{r}
+mysecant = function(f, x0, x1, tol = 1e-8, max_iter = 100) {
+  for (i in 1:max_iter) {
+    f0 = f(x0)
+    f1 = f(x1)
+    x2 = x1 - f1 * (x1 - x0) / (f1 - f0)
+    if (abs(x2 - x1) < tol) {
+      cat("Converged in", i, "iterations\n")
+      return(x2)
+    }
+    x0 = x1
+    x1 = x2
+  }
+  warning("Does not converge")
+  return(NA)
+}
+```
+
+Define the function.
+```{r}
+f = function(x) log(x) - exp(-x) + 1
+```
+
+Plot the function.
+```{r}
+curve(f(x), from = 0.01, to = 1, col = "blue", lwd = 2,
+      ylab = "f(x)", xlab = "x", main = "f(x)")
+```
+
+Use the secant method function.
+```{r}
+root = mysecant(f, x0 = 0.2, x1 = 0.5)
+root
+f(root)
+```
+
+
+
+
+## Question 5:
+
+Let p be the quadratic 
+$$
+p(x) = c_0 + c_1 x + c_2 x^2.
+$$
+Simpson’s rule uses a quadratic to approximate a given function f over
+two adjacent intervals, then uses the integral of the quadratic to
+approximate the integral of the function.
+
+(a) Show that
+
+$$
+\int_{-h}^{h} p(x) \, dx = 2h c_0 + \frac{2}{3} c_2 h^3.
+$$
+
+We have the quadratic function  
+
+$$
+p(x) = c_0 + c_1x + c_2x^2
+$$
+
+We want to compute  
+
+$$
+\int_{-h}^{h} p(x) \, dx = \int_{-h}^{h} (c_0 + c_1x + c_2x^2) \, dx
+$$
+
+Start with integrating by term. 
+$$
+\int_{-h}^{h} p(x) \, dx 
+= c_0 \int_{-h}^{h} dx 
++ c_1 \int_{-h}^{h} x \, dx 
++ c_2 \int_{-h}^{h} x^2 \, dx
+$$
+
+And we observe that.
+$$
+\int_{-h}^{h} dx = 2h, \quad 
+\int_{-h}^{h} x \, dx = 0, \quad 
+\int_{-h}^{h} x^2 \, dx = \frac{2h^3}{3}
+$$
+
+Then substitute the results.
+$$
+\int_{-h}^{h} p(x) \, dx = 2h c_0 + \frac{2}{3} c_2 h^3
+$$
+
+
+
+(b) Write down three equations that constrain the quadratic to pass through
+the points $(-h, f(-h))$, $(0, f(0))$, and $(h, f(h))$,
+then solve them for $c_0$ and $c_2$.
+
+The quadratic.
+$$
+p(x) = c_0 + c_1 x + c_2 x^2
+$$
+
+is required to pass through the three points
+$$
+(-h,\, f(-h)),\qquad (0,\, f(0)),\qquad (h,\, f(h)).
+$$
+
+These give the three equations.
+$$
+\begin{aligned}
+f(-h) &= c_0 - c_1 h + c_2 h^2,\\[4pt]
+f(0)  &= c_0\\[4pt]
+f(h)  &= c_0 + c_1 h + c_2 h^2
+\end{aligned}
+$$
+
+From the middle equation we immediately have.
+$$
+{c_0 = f(0)}
+$$
+
+Add the first and third equations to eliminate $c_1$:
+$$
+f(h) + f(-h) = 2c_0 + 2c_2 h^2.
+$$
+
+Substitute $c_0=f(0)$ and solve for $c_2$:
+$$
+\begin{aligned}
+2c_2 h^2 &= f(h) + f(-h) - 2f(0) \\[6pt]
+\Rightarrow\quad
+c_2 &= \frac{f(h) + f(-h) - 2f(0)}{2h^2}
+\end{aligned}
+$$
+
+Subtract the first equation from the third to solve for $c_1$:
+$$
+f(h) - f(-h) = 2 c_1 h
+\quad\Longrightarrow\quad
+{c_1 = \dfrac{f(h) - f(-h)}{2h}}
+$$
+
+So the coefficients determined by interpolation at $-h,0,h$ are
+$$
+{\,c_0 = f(0),\qquad
+c_1 = \dfrac{f(h)-f(-h)}{2h},\qquad
+c_2 = \dfrac{f(h)+f(-h)-2f(0)}{2h^2}\,}
+$$
+
+
+
+(c) Show that
+
+$$
+\int_{-h}^{h} p(x) \, dx = \frac{h}{3} \left[ f(-h) + 4f(0) + f(h) \right].
+$$
+
+We start from the result of part (a):
+$$
+\int_{-h}^{h} p(x)\,dx = 2h c_0 + \frac{2}{3} c_2 h^3.
+$$
+
+From part (b).
+$$
+c_0 = f(0), \qquad
+c_2 = \frac{f(h)+f(-h)-2f(0)}{2h^2}.
+$$
+
+Substitute these into the integral:
+$$
+\begin{aligned}
+\int_{-h}^{h} p(x)\,dx
+&= 2h f(0) + \frac{2}{3} h^3 \cdot \frac{f(h)+f(-h)-2f(0)}{2h^2} \\[6pt]
+&= 2h f(0) + \frac{h}{3}\bigl(f(h)+f(-h)-2f(0)\bigr) \\[6pt]
+&= \frac{h}{3}\bigl(6f(0) + f(h)+f(-h)-2f(0)\bigr) \\[6pt]
+&= \frac{h}{3}\bigl(f(-h) + 4f(0) + f(h)\bigr).
+\end{aligned}
+$$
+
+Then we get.
+$$
+{\displaystyle
+\int_{-h}^{h} p(x)\,dx \;=\; \frac{h}{3}\bigl[f(-h)+4f(0)+f(h)\bigr]
+}
+$$
+
+
+
+## Question 6:
+
+The Riemann approximation to an integral $I = \int_a^b f(x) \, dx$ uses 
+rectangles.  
+For a partition of size $n$ we have the approximation  
+
+$$
+\hat{I} = \sum_{i=0}^{n-1} f(a + ih)h
+$$  
+
+where $h = (b - a)/n$ is the width of each interval in the partition.  
+
+What is the difference between the Riemann and trapezoidal approximations 
+(using the same partition)?  
+
+It is known that if $-\infty < a < b < \infty$ and $f$ is continuous on 
+$[a, b]$, then $\hat{I}$ converges as $n \to \infty$. Using this result, 
+conclude that the trapezoidal approximation converges as $n \to \infty$, 
+to the same value.
+
+Define simple function to test.
+```{r}
+f = function(x) exp(-x^2)
+a = 0
+b = pi
+I_true = 2
+```
+
+Compute Riemann.
+```{r}
+riemann = function(f, a, b, n) {
+  h = (b - a) / n
+  x = seq(a, b - h, by = h)
+  sum(f(x)) * h
+}
+```
+
+Compute trapezoidal.
+```{r}
+trapezoid = function(f, a, b, n) {
+  h = (b - a) / n
+  x = seq(a, b, by = h)
+  (h/2) * (f(a) + 2 * sum(f(x[-c(1, length(x))])) + f(b))
+}
+```
+
+Test different partition sizes.
+```{r}
+n_values = c(10, 50, 100, 1000, 10000)
+results = data.frame(
+  n = n_values,
+  Riemann = sapply(n_values, function(n) riemann(f, a, b, n)),
+  Trapezoid = sapply(n_values, function(n) trapezoid(f, a, b, n))
+)
+```
+
+Compute difference and print results for different partition values.
+```{r}
+results$Difference = results$Trapezoid - results$Riemann
+results
+```
+
+
+
+## Question 7:
+
+Use the golden section search algorithm to find all of the local maxima of
+the function
+
+$$
+f(x) =
+\begin{cases}
+0, & x = 0 \\
+|x| \log\left(\frac{|x|}{2}\right) e^{-|x|}, & \text{o/w}
+\end{cases}
+$$
+within the interval [-10, 10].
+Hint: plotting the function first will give you a good idea where to look.
+
+
+Define the function.
+```{r}
+f = function(x) {
+  ifelse(x == 0, 0, abs(x) * log(abs(x) / 2) * exp(-abs(x)))
+}
+```
+
+Plot function to know where to look.
+```{r}
+x_vals = seq(-10, 10, length.out = 2000)
+y_vals = f(x_vals)
+plot(x_vals, y_vals, type = "l", lwd = 2, col = "blue",
+     main = "Plot of f(x)",
+     xlab = "x", ylab = "f(x)")
+```
+
+create a function that uses golden section search algorithm for maxima.
+```{r}
+golden_search_max = function(f, a, b, tol = 1e-8, maxit = 1000) {
+  gr = (sqrt(5) - 1) / 2
+  c = b - gr * (b - a)
+  d = a + gr * (b - a)
+  fc = f(c); fd = f(d)
+  iter = 0
+  
+  while (abs(b - a) > tol && iter < maxit) {
+    if (fc < fd) {
+      a = c
+      c = d
+      d = a + gr * (b - a)
+      fc = fd
+      fd = f(d)
+    } else {
+      b = d
+      d = c
+      c = b - gr * (b - a)
+      fd = fc
+      fc = f(c)
+    }
+    iter = iter + 1
+  }
+  x_opt = (a + b) / 2
+  list(x = x_opt, f = f(x_opt), iter = iter)
+}
+```
+
+
+Looking at the plot, we are going to search for three local maxima.
+```{r}
+max1 = golden_search_max(f, -10, -1) 
+max2 = golden_search_max(f, -1, 1)
+max3 = golden_search_max(f, 1, 10) 
+```
+
+Print the results.
+```{r}
+results = data.frame(
+  Interval = c("[-10, -1]", "[-1, 1]", "[1, 10]"),
+  x_max = c(max1$x, max2$x, max3$x),
+  fx_max = c(max1$f, max2$f, max3$f)
+)
+
+results
+```
+
+
+

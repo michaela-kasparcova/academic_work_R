@@ -1,0 +1,179 @@
+---
+title: "Misa Kasparcova STAT 490 HW1"
+author: "Misa Kasparcova"
+date: "2025-09-28"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Exercise 1:
+
+Create data frame.
+```{r}
+data1 = data.frame(
+  Study   = c(154, 156, 157, "162A", 163, 166, "303A", 306),
+  nE      = c(46, 30, 75, 12, 42, 31, 27, 46),
+  meanE   = c(0.2316, 0.2811, 0.1894, 0.0930, 0.1622, 0.1837, 0.6612, 0.1366),
+  varE    = c(0.2254, 0.1441, 0.1981, 0.1389, 0.0961, 0.1246, 0.7060, 0.1211),
+  nC      = c(48, 26, 72, 12, 34, 31, 27, 47),
+  meanC   = c(-0.0027, 0.0270, 0.0443, 0.2277, 0.0056, 0.0943, -0.0057, -0.0057),
+  varC    = c(0.0007, 0.1139, 0.4972, 0.0488, 0.0955, 0.1734, 0.9891, 0.1291)
+)
+```
+
+
+Create function.
+```{r}
+compute_effect = function(nE, meanE, varE, nC, meanC, varC) {
+  sp = sqrt(((nE-1)*varE + (nC-1)*varC) / (nE+nC-2))   
+  d  = (meanE - meanC) / sp     # Cohen's d                 
+  J  = 1 - (3 / (4*(nE+nC) - 9))                      
+  g  = J * d   # Hedges' g*                                      
+  
+  se = sqrt((nE + nC) / (nE * nC) + (g^2) / (2*(nE+nC))) #SE
+  
+  z  = qnorm(0.95)    # two-sided 99% CI                                  
+  lcl = g - z*se
+  ucl = g + z*se
+  zval = g / se                             
+  pval = 1 - pnorm(zval)                               
+  
+  return(c(g, se, lcl, ucl, pval))
+}
+``` 
+
+Apply results for all studies.
+```{r}
+results = t(mapply(compute_effect, data1$nE, data1$meanE, data1$varE,
+                                  data1$nC, data1$meanC, data1$varC))
+```
+
+
+
+Create final table to report results.
+```{r}
+table1 = data.frame(
+  Study                  = data1$Study,
+  "Estimated effect size theta hat" = results[,1],
+  "SE theta hat"                = results[,2],
+  "90% LCL for theta"        = results[,3],
+  "90% UCL for theta"        = results[,4],
+  "P-value"              = results[,5],
+  check.names = FALSE
+)
+
+print(table1, row.names = FALSE)
+```
+
+
+## Exercise 2:
+
+Create data frame.
+```{r}
+data2 = data.frame(
+  Trial = c(1,2,3,4,5,6,7,8,9,10,11,12,13),
+  Vac_Disease      = c(4, 6, 3, 62, 33, 180, 7, 505, 29, 17, 186, 5, 27),
+  Vac_NoDisease    = c(119, 300, 228, 13536, 5036, 1361, 2537, 87866, 7470, 1699, 50448, 2493, 16886),
+  NotVac_Disease   = c(11, 29, 11, 248, 47, 372, 10, 499, 45, 65, 414, 3, 29),
+  NotVac_NoDisease = c(128, 274, 209, 12619, 5761, 1079, 619, 87892, 7232, 1600, 27197, 2338, 17825)
+)
+
+```
+
+
+Create function.
+```{r}
+compute_logOR = function(Vac_Disease, Vac_NoDisease, NotVac_Disease, NotVac_NoDisease) {
+  
+  odds_ratio = (Vac_Disease * NotVac_NoDisease) / (Vac_NoDisease * NotVac_Disease)
+  log_or = log(odds_ratio)
+  se_log_or = sqrt(1/Vac_Disease + 1/Vac_NoDisease + 1/NotVac_Disease + 1/NotVac_NoDisease) # SE
+  
+
+  lcl = log_or - 1.96 * se_log_or # 95% CI
+  ucl = log_or + 1.96 * se_log_or
+  z_value = log_or / se_log_or 
+  p_value = 2 * (1 - pnorm(abs(z_value)))
+  
+  return(c(log_or, se_log_or, lcl, ucl, p_value))
+}
+
+```
+
+Apply results for all studies.
+```{r}
+results2 = t(mapply(
+  compute_logOR,
+  data2$Vac_Disease,
+  data2$Vac_NoDisease,
+  data2$NotVac_Disease,
+  data2$NotVac_NoDisease
+))
+```
+
+
+Create final table to report results.
+```{r}
+table2 = data.frame(
+  Trial = data2$Trial,
+  "omega" = results2[,1],
+  "SE(omega hat)" = results2[,2],
+  "95% LCL for omega hat" = results2[,3],
+  "95% UCL for omega hat" = results2[,4],
+  "P-value" = results2[,5],
+  check.names = FALSE
+)
+
+print(table2)
+```
+
+
+## Exercise 3:
+
+Create function.
+```{r}
+compute_fisher = function(n, r) {
+  zeta = 0.5 * log((1 + r) / (1 - r)) # Fisher z-transform
+  se_zeta = 1 / sqrt(n - 3) # Standard error for zeta
+  
+  z_crit = qnorm(0.995)   # 99% CI
+  LCL99 = zeta - z_crit * se_zeta
+  UCL99 = zeta + z_crit * se_zeta
+  z_stat = zeta / se_zeta
+  p_value = 2 * (1 - pnorm(abs(z_stat)))
+  
+  return(c(zeta, se_zeta, LCL99, UCL99, p_value))
+}
+```
+
+
+Apply results for all studies.
+```{r}
+Study = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)
+n = c(10, 20, 13, 22, 28, 12, 12, 36, 19, 12, 36, 75, 33, 121, 37, 14, 40, 16, 
+      14, 20)
+r = c(0.68, 0.56, 0.23, 0.64, 0.49, -0.04, 0.49, 0.33, 0.58, 0.18, -0.11, 0.27,
+      0.26, 0.40, 0.49, 0.51, 0.40, 0.34, 0.42, 0.16)
+results3 = t(mapply(compute_fisher, n, r))
+```
+
+
+Create final table to report results.
+```{r}
+table3 = data.frame(
+  Study = Study,
+  "zeta hat" = results3[,1],
+  "SE(zeta hat)" = results3[,2],
+  "99% LCL for zeta" = results3[,3],
+  "99% UCL for zeta" = results3[,4],
+  "P-value" = results3[,5],
+  check.names = FALSE
+)
+
+print(table3)
+```
+
+
+
+
