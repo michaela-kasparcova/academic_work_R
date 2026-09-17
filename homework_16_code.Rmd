@@ -1,0 +1,61 @@
+---
+title: "Homework 16 Solutions"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+snails = read.table("snails.csv", header = TRUE, sep = ",")
+```
+
+Part 1a
+
+```{r}
+plot(snails$length, snails$weight, pch = 19, xlab = "Length", ylab = "Weight")
+```
+
+Part 1b
+
+```{r}
+model = lm(weight ~ length, data = snails)
+summary(model)
+```
+
+Part 1c
+
+```{r}
+snails$pred = predict(model)
+require(MASS)
+snails$stud_res = stdres(model)
+plot(snails$pred, snails$stud_res, pch = 19, xlab = "Predicted Weight", ylab = "Studentized Residual")
+abline(a=0, b=0)
+qqnorm(snails$stud_res, pch = 19)
+qqline(snails$stud_res)
+```
+
+Part 1f
+
+```{r}
+snails$log_weight = log(snails$weight)
+plot(snails$length, snails$log_weight, pch = 19, xlab = "Length", ylab = "Natural Log of Weight")
+```
+
+Part 1g
+
+```{r}
+tr_model = lm(log(weight) ~ length, data = snails)
+summary(tr_model)
+```
+
+Part 1h
+
+```{r}
+snails$pred = predict(tr_model)
+require(MASS)
+snails$stud_res = stdres(tr_model)
+plot(snails$pred, snails$stud_res, pch = 19, xlab = "Predicted Natural Log of  Weight", ylab = "Studentized Residual")
+abline(a=0, b=0)
+qqnorm(snails$stud_res, pch = 19)
+qqline(snails$stud_res)
+```

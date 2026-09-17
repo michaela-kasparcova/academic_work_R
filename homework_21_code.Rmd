@@ -1,0 +1,70 @@
+---
+title: "Homework 21"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+housing = read.table("boston_housing_complete.csv", header = TRUE, sep = ",")
+```
+
+Problem 1a
+
+```{r}
+require(caret)
+model1 = lm(PRICE ~ CRIME + ZONE + NOX + RM + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing)
+cv = trainControl(method = "LOOCV")
+model1 = train(PRICE ~ CRIME + ZONE + NOX + RM + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing, method = "lm", trControl = cv)
+model1$results
+```
+
+Problem 1b
+
+```{r}
+require(caret)
+model2 = lm(PRICE ~ CRIME + ZONE + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing)
+cv = trainControl(method = "LOOCV")
+model2 = train(PRICE ~ CRIME + ZONE + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing, method = "lm", trControl = cv)
+model2$results
+```
+
+Problem 1c
+
+```{r}
+require(caret)
+model3 = lm(PRICE ~ ZONE + NOX + RM + DIS + PTRATIO + BLACK + LSTAT, data = housing)
+cv = trainControl(method = "LOOCV")
+model3 = train(PRICE ~ ZONE + NOX + RM + DIS + PTRATIO + BLACK + LSTAT, data = housing, method = "lm", trControl = cv)
+model3$results
+```
+
+Problem 1h
+
+```{r}
+require(caret)
+model1 = lm(PRICE ~ CRIME + ZONE + NOX + RM + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing)
+cv = trainControl(method = "cv", number = 10)
+model1 = train(PRICE ~ CRIME + ZONE + NOX + RM + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing, method = "lm", trControl = cv)
+model1$results
+```
+
+Problem 1i
+
+```{r}
+require(caret)
+model2 = lm(PRICE ~ CRIME + ZONE + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing)
+cv = trainControl(method = "cv", number = 10)
+model2 = train(PRICE ~ CRIME + ZONE + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing, method = "lm", trControl = cv)
+model2$results
+```
+
+Problem 1j
+
+```{r}
+require(caret)
+model3 = lm(PRICE ~ ZONE + NOX + RM + DIS + PTRATIO + BLACK + LSTAT, data = housing)
+cv = trainControl(method = "cv", number = 10)
+model3 = train(PRICE ~ ZONE + NOX + RM + DIS + PTRATIO + BLACK + LSTAT, data = housing, method = "lm", trControl = cv)
+model3$results
+```

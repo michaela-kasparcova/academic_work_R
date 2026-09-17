@@ -1,0 +1,41 @@
+---
+title: "Homework 9"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+concrete = read.table("concrete.csv", header = TRUE, sep = ",")
+```
+
+Problem 1a
+
+```{r}
+model_full = lm(strength ~ cement + water + superplasticizer + coarse + fine, data = concrete)
+anova(model_full)
+model_reduced = lm(strength ~ cement + water + superplasticizer, data = concrete)
+anova(model_reduced)
+```
+
+Problem 1c
+
+```{r}
+model_full = lm(strength ~ cement + water + superplasticizer + coarse + fine, data = concrete)
+anova(model_full)
+model_reduced2 = lm(strength ~ cement + water, data = concrete)
+anova(model_reduced2)
+```
+
+Problem 1f
+
+```{r}
+model_3 = lm(strength ~ cement + water + superplasticizer, data = concrete)
+new_data = as.data.frame(t(c(260,180,7)))
+colnames(new_data) = c("cement","water","superplasticizer")
+conf_int = predict(model_3, new_data, se.fit = TRUE, interval = "confidence")
+pred_int = predict(model_3, new_data, se.fit = TRUE, interval = "prediction")
+print(conf_int$fit)
+print(pred_int$fit)
+print(pred_int$se.fit)
+```

@@ -1,0 +1,76 @@
+---
+title: "Homework 19-20"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+housing = read.table("boston_housing_complete.csv", header = TRUE, sep = ",")
+```
+
+Problem 1b
+
+```{r}
+model1 = lm(PRICE ~ CRIME + ZONE + INDUS + NOX + RM + AGE, data = housing)
+anova(model1)
+```
+
+Problem 1d
+
+```{r}
+require(leaps)
+best_models = leaps(x = housing[,2:13], y = housing[,1], names = names(housing)[2:13], method = "adjr2")
+adjR2 = as.data.frame(cbind(best_models$which, best_models$size, best_models$adjr2))
+print(adjR2)
+```
+
+Problem 1f
+
+```{r}
+require(leaps)
+max_model = lm(PRICE ~ CRIME + ZONE + INDUS + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing)
+anova(max_model)
+model2 = lm(PRICE ~ DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing)
+anova(model2)
+```
+
+Problem 1h
+
+```{r}
+require(leaps)
+best_models = leaps(x = housing[,2:13], y = housing[,1], names = names(housing)[2:13], method = "Cp")
+mallows_cp = as.data.frame(cbind(best_models$which, best_models$size, best_models$Cp, abs(best_models$Cp-best_models$size)))
+print(mallows_cp)
+```
+
+Problem 1k
+
+```{r}
+model1 = lm(PRICE ~ CRIME + ZONE + INDUS + NOX + RM + AGE, data = housing)
+anova(model1)
+```
+
+Problem 1m
+
+```{r}
+model2 = lm(PRICE ~ DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing)
+anova(model2)
+```
+
+Problem 1o
+
+```{r}
+require(MASS)
+min_model = lm(PRICE ~ 1, data = housing)
+max_model = formula(lm(PRICE ~ CRIME + ZONE + INDUS + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing))
+best_model = step(min_model, direction = "forward", scope = max_model, k = log(506))
+```
+
+Problem 1q
+
+```{r}
+require(MASS)
+max_model = lm(PRICE ~ CRIME + ZONE + INDUS + NOX + RM + AGE + DIS + RAD + TAX + PTRATIO + BLACK + LSTAT, data = housing)
+best_model = step(max_model, direction = "backward")
+```

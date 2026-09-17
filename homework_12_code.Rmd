@@ -1,0 +1,40 @@
+---
+title: "Homework 12 Code"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+diet = read.table("diet.csv", header = TRUE, sep = ",")
+```
+
+Problem 1a
+
+```{r}
+colors = c("blue","red","black")
+plot(diet$calories, diet$weight_lost, pch = 19,col = colors[factor(diet$method)], xlab = "Calories", ylab = "Weight Lost")
+legend("topright", legend = c("both", "diet", "exercise"), pch = 19, col = colors)
+```
+
+Problem 1c
+
+```{r}
+diet$exer = ifelse(diet$method == "exercise", 1, 0)
+diet$both = ifelse(diet$method == "both", 1,0)
+```
+
+Problem 1d
+
+```{r}
+model = lm(weight_lost ~ calories + exer + both, data = diet)
+summary(model)
+```
+
+Problem 1i
+
+```{r}
+model = lm(weight_lost ~ calories + exer + both, data = diet)
+cov_matrix = vcov(model)
+print(cov_matrix)
+```

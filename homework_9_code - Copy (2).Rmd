@@ -1,0 +1,28 @@
+---
+title: "Homework 9"
+author: ""
+---
+
+Read in data
+
+```{r}
+
+```
+
+Problem 1a
+
+```{r}
+
+```
+
+Problem 1c
+
+```{r}
+
+```
+
+Problem 1f
+
+```{r}
+
+```

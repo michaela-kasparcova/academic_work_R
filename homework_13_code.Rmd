@@ -1,0 +1,50 @@
+---
+title: "Homework 13"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+marijuana = read.table("marijuana.csv", header = TRUE, sep = ",")
+```
+
+Problem 1a
+
+```{r}
+colors = c("red", "blue")
+plot(marijuana$alcohol, marijuana$marijuana, pch = 19, col = colors[factor(marijuana$recreational)], xlab = "Gallons of Alcohol Consumed", ylab = "Percentage Recreational Marijuana Users")
+
+```
+
+Problem 1c
+
+```{r}
+legal = marijuana$no = ifelse(marijuana$recreational == "No", 0, 1)
+table(marijuana$no)
+```
+
+Problem 1d
+
+```{r}
+full = lm(marijuana ~ alcohol + no + alcohol*no, data = marijuana)
+anova(full)
+reduced = lm(marijuana ~ alcohol, data = marijuana)
+anova(reduced)
+```
+
+Problem 1f
+
+```{r}
+full = lm(marijuana ~ alcohol + no + alcohol*no, data = marijuana)
+anova(full)
+reduced = lm(marijuana ~ alcohol + no, data = marijuana)
+anova(reduced)
+```
+
+Problem 1i
+
+```{r}
+model = lm(marijuana ~ alcohol + no + alcohol*no, data = marijuana)
+summary(model)
+```

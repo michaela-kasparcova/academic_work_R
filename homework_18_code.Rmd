@@ -1,0 +1,48 @@
+---
+title: "Homework 18"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+charges = read.table("charges.csv", header = TRUE, sep = ",")
+```
+
+Part 1a
+
+```{r}
+plot(charges$charges, charges$tempurature, pch = 19, xlab = "Tempurature", ylab = "Charges")
+```
+
+Part 1b
+
+```{r}
+require(EnvStats)
+linear_model = lm(charges ~ temperature , data = charges)
+summary(linear_model)
+anova(linear_model)
+anovaPE(linear_model)
+```
+
+Part 1e
+
+```{r}
+require(EnvStats)
+temperature_sq = charges$temperature^2
+quad_model = lm(charges ~ temperature + temperature_sq, data = charges)
+summary(quad_model)
+anova(quad_model)
+anovaPE(quad_model)
+```
+
+Part 1h
+
+```{r}
+require(EnvStats)
+temperature_cubed = charges$temperature^3
+cubic_model = lm(charges ~ temperature + temperature_sq + temperature_cubed, data = charges)
+summary(cubic_model)
+anova(cubic_model)
+anovaPE(cubic_model)
+```

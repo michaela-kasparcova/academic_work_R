@@ -1,0 +1,67 @@
+---
+title: "Homework 10-11 Code"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+concrete = read.table("concrete.csv", header = TRUE, sep = ",")
+```
+
+Problem 1a
+
+```{r}
+model = lm(strength ~ cement + water + superplasticizer, data = concrete)
+summary(model)
+```
+
+Problem 1c
+
+```{r}
+concrete$leverage = hatvalues(model)
+plot(concrete$leverage, type = "h", xlab = "Concrete", ylab = "Leverage")
+abline(a = 2/11, b = 0)
+```
+
+Problem 1e
+
+```{r}
+require(MASS)
+concrete$pred = predict(model)
+concrete$residuals = residuals(model)
+concrete$stud_res = stdres(model)
+concrete$jackknife = rstudent(model)
+plot(concrete$pred, concrete$jackknife, pch = 19, xlab = "Predicted Strength", ylab = "Jackknife Residual")
+abline(a=0, b=0)
+```
+
+Problem 1f
+
+```{r}
+qqnorm(concrete$jackknife, pch = 19)
+qqline(concrete$jackknife)
+```
+
+Problem 1g
+
+```{r}
+shapiro.test(concrete$jackknife)
+```
+
+Problem 1m
+
+```{r}
+concrete$cook = cooks.distance(model)
+plot(concrete$cook, xlab = "Observation", ylab = "Cook's Distance", type = "h")
+abline(a = 4/44, b = 0)
+```
+
+Problem 1o
+
+```{r}
+concrete$inf_pt = ifelse(concrete$cook > 4/44, 1, 0)
+s = concrete[which(concrete$inf_pt == 0), ]
+model_2 = lm(strength ~ cement + water + superplasticizer, data = s)
+summary(model_2)
+```

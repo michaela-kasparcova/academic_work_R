@@ -1,0 +1,33 @@
+---
+title: "Homework 14"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+diet = read.table("diet.csv", header = TRUE, sep = ",")
+```
+
+Problem 1a
+
+```{r}
+exercise = ifelse(diet$method == "exercise", 1, 0)
+both = ifelse(diet$method == "both", 1,0)
+model = lm(weight_lost ~ calories, data = diet)
+summary(model)
+```
+
+Problem 1c
+
+```{r}
+exercise = ifelse(diet$method == "exercise", 1, 0)
+both = ifelse(diet$method == "both", 1,0)
+model1 = lm(weight_lost ~ calories + exercise + both, data = diet)
+summary(model1)
+model2 = lm(weight_lost ~ calories + age, data = diet)
+summary(model2)
+model3 = lm(weight_lost ~ calories + exercise + both + age, data = diet)
+summary(model3)
+
+```

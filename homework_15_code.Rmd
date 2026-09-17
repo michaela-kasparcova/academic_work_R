@@ -1,0 +1,31 @@
+---
+title: "Homework 15"
+author: "Misa Kasparcova"
+---
+
+Read in data
+
+```{r}
+diet = read.table("diet.csv", header = TRUE, sep = ",")
+```
+
+Problem 1a
+
+```{r}
+exercise = ifelse(diet$method == "exercise", 1, 0)
+both = ifelse(diet$method == "both", 1,0)
+full_model = lm(weight_lost ~ calories + exercise + both + calories*method, data = diet)
+reduced_model = lm(weight_lost ~ calories + exercise + both, data = diet)
+anova(full_model)
+anova(reduced_model)
+```
+
+Problem 1c
+
+```{r}
+full_model = lm(weight_lost ~ calories + exercise + both, data = diet)
+reduced_model = lm(weight_lost ~ calories, data = diet)
+anova(full_model)
+anova(reduced_model)
+summary(full_model)
+```
