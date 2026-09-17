@@ -1,0 +1,13 @@
+---
+title: "STAT 490 Final Project"
+author: "Misa Kasparcova"
+date: "2025-04-22"
+output: pdf_document
+---
+
+
+```{r}
+data = read.csv("C:\\Users\\misak\\Downloads\\dairy_dataset.csv")
+head(data)
+```
+
